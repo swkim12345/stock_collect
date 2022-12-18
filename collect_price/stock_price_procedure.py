@@ -38,10 +38,12 @@ def _append_csv(base_dir, file_name, data):
 
 def _new_app_token(key, url):
 	app_key_url = url['real_app_domain'] + url['new_app_token']
-	if key['apptoken']:
-		task = asyncio.run(domestic_stock_price(key, url, "000660"))
-		if task.status_code == 200:
-			return key['apptoken']
+	# 원래는 지금 현재 발급되어 있는 앱 토큰이 작동이 되는 지 확인 후 작동되는 거지만,
+	# 이럴 경우 예전 토큰을 사용하고 명령이 실행되는 도중 만료되면 에러가 발생하므로 해제시켜놓음.
+	# if key['apptoken']:
+	# 	task = asyncio.run(domestic_stock_price(key, url, "000660"))
+	# 	if task.status_code == 200:
+	# 		return key['apptoken']
 
 	data = {
 		"grant_type": key['grant_type'],
