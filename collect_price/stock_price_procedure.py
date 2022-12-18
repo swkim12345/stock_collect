@@ -176,7 +176,7 @@ def kospi_stock_price_csv(base_dir, key, url, ws):
 			for output1_val in stock_price['output2']:
 				_append_csv(target_folder, cell_val, list(stock_price['output1'].values()) + list(output1_val.values()))
 			inquire_time = inquire_time + datetime.timedelta(minutes=30)
-		print("kospi 분봉 수집 퍼센트 : " + str(j / ws.max_row))
+		print("kospi 분봉 수집 퍼센트 : " + str(j / ws.max_row * 100))
 	end = time.time()
 	print("kospi 분봉 수집시간 : " + str(end - start))
 
@@ -206,7 +206,7 @@ def kosdaq_stock_price_csv(base_dir, key, url, ws):
 			for output1_val in stock_price['output2']:
 				_append_csv(target_folder, cell_val, list(stock_price['output1'].values()) + list(output1_val.values()))
 			inquire_time = inquire_time + datetime.timedelta(minutes=30)
-		print("kosdaq 분봉 수집 퍼센트 : " + str(j / ws.max_row))
+		print("kosdaq 분봉 수집 퍼센트 : " + str(j / ws.max_row * 100))
 	end = time.time()
 	print("kosdaq 분봉 수집시간 : " + str(end - start))
 
