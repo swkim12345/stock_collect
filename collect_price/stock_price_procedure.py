@@ -11,6 +11,8 @@ import time
 import datetime
 from openpyxl import load_workbook
 
+today = datetime.datetime.today().strftime('%Y_%m_%d')
+
 def _read_yaml(base_dir, file_name):
 	file_dir = base_dir + _dir_seperator_check() + file_name
 	with open(file_dir) as f:
@@ -158,7 +160,7 @@ def _init(base_dir):
 
 def kospi_stock_price_csv(base_dir, key, url, ws):
 	kospi_price = "kospi"
-	today = datetime.datetime.today().strftime('%Y_%m_%d')
+	global today
 
 	start = time.time()
 	tmp = _create_folder(base_dir, today)
@@ -191,7 +193,7 @@ def kospi_stock_price_csv(base_dir, key, url, ws):
 
 def kosdaq_stock_price_csv(base_dir, key, url, ws):
 	kosdaq_price = "kosdaq"
-	today = datetime.datetime.today().strftime("%Y_%m_%d")
+	global today
 
 	start = time.time()
 	tmp = _create_folder(base_dir, today)
@@ -243,12 +245,12 @@ def main():
 	base_dir = os.path.dirname(__file__)
 	dir_seperator = _dir_seperator_check()
 	(key, url) = _init(base_dir)
-	target_dir = base_dir + dir_seperator + datetime.datetime.today().strftime('%Y_%m_%d')
+	target_dir = base_dir + dir_seperator + today
 
 	kospi_ws = _read_xlxs(target_dir + dir_seperator + 'kospi', 'kospi_code.xlsx')
 	kospi_stock_price_csv(base_dir, key, url, kospi_ws)
 	kosdaq_ws = _read_xlxs(target_dir + dir_seperator + 'kosdaq', 'kosdaq_code.xlsx')
 	kosdaq_stock_price_csv(base_dir, key, url, kosdaq_ws)
-	#_make_tar('2022_12_16_kospi_price', '2022_12_16.tar.gz')
+	_make_tar(today, today + '.tar.gz')
 
 main()
