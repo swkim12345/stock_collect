@@ -30,11 +30,17 @@ def _write_yaml(base_dir, file_name, data):
 	with open(file_dir, 'w') as f:
 		yaml.dump(data=data, stream=f)
 
-def _append_csv(base_dir, file_name, data):
+def _writerow_csv(base_dir, file_name, data):
 	file_dir = base_dir + _dir_seperator_check() + file_name
 	with open(file_dir + '.csv', 'a') as f:
 		wr = csv.writer(f)
 		wr.writerow(data)
+
+def _writerows_csv(base_dir, file_name, data):
+	file_dir = base_dir + _dir_seperator_check() + file_name
+	with open(file_dir + '.csv', 'a') as f:
+		wr = csv.writer(f)
+		wr.writerows(data)
 
 def _new_app_token(key, url):
 	app_key_url = url['real_app_domain'] + url['new_app_token']
@@ -156,9 +162,10 @@ def kospi_stock_price_csv(base_dir, key, url, ws):
 
 	start = time.time()
 	tmp = _create_folder(base_dir, today)
-	target_folder = _create_folder(tmp, kospi_price)
+	kospi_dir = _create_folder(tmp, kospi_price)
 
 	for j in range(2, ws.max_row + 1):
+		list_stock_price = list()
 		cell_num = "A" + str(j)
 		cell_val = ws[cell_num].value
 
@@ -167,15 +174,17 @@ def kospi_stock_price_csv(base_dir, key, url, ws):
 		if stock_price['rt_cd'] != '0':
 			print("정상응답이 아닙니다. 종료합니다.")
 			return
-		_append_csv(target_folder, cell_val, list(stock_price['output1'].keys()))
+		_writerow_csv(kospi_dir, cell_val, list(stock_price['output1'].keys()) + list((stock_price['output2'])[0].keys()))
 		for i in range(0, 19):
 			stock_price = asyncio.run(domestic_stock_min_price(key, url, cell_val, inquire_time.strftime("%H%M%S"))).json()
 			if stock_price['rt_cd'] != '0':
 				print("정상응답이 아닙니다. 종료합니다.")
 				return
 			for output1_val in stock_price['output2']:
-				_append_csv(target_folder, cell_val, list(stock_price['output1'].values()) + list(output1_val.values()))
+				list_stock_price.append(list(list(stock_price['output1'].values()) + list(output1_val.values())))
 			inquire_time = inquire_time + datetime.timedelta(minutes=30)
+		list_stock_price.sort(key=lambda x:x[9])
+		_writerows_csv(kospi_dir, cell_val, list_stock_price)
 		print("kospi 분봉 수집 퍼센트 : " + str(j / ws.max_row * 100))
 	end = time.time()
 	print("kospi 분봉 수집시간 : " + str(end - start))
@@ -186,9 +195,10 @@ def kosdaq_stock_price_csv(base_dir, key, url, ws):
 
 	start = time.time()
 	tmp = _create_folder(base_dir, today)
-	target_folder = _create_folder(tmp, kosdaq_price)
+	kosdaq_dir = _create_folder(tmp, kosdaq_price)
 
 	for j in range(2, ws.max_row + 1):
+		list_stock_price = list()
 		cell_num = "A" + str(j)
 		cell_val = ws[cell_num].value
 		inquire_time = datetime.datetime(year=2022, month=12, day=12, hour=9, minute=29, second=0)
@@ -197,15 +207,16 @@ def kosdaq_stock_price_csv(base_dir, key, url, ws):
 		if stock_price['rt_cd'] != '0':
 			print("정상응답이 아닙니다. 종료합니다.")
 			return
-		_append_csv(target_folder, cell_val, list(stock_price['output1'].keys()))
+		_writerow_csv(kosdaq_dir, cell_val, list(stock_price['output1'].keys()) + list((stock_price['output2'])[0].keys()))
 		for i in range(0, 19):
 			stock_price = asyncio.run(domestic_stock_min_price(key, url, cell_val, inquire_time.strftime("%H%M%S"))).json()
 			if stock_price['rt_cd'] != '0':
 				print("정상응답이 아닙니다. 종료합니다.")
 				return
 			for output1_val in stock_price['output2']:
-				_append_csv(target_folder, cell_val, list(stock_price['output1'].values()) + list(output1_val.values()))
+				list_stock_price.append(list(list(stock_price['output1'].values()) + list(output1_val.values())))
 			inquire_time = inquire_time + datetime.timedelta(minutes=30)
+		_writerows_csv(kosdaq_dir, cell_val, list_stock_price)
 		print("kosdaq 분봉 수집 퍼센트 : " + str(j / ws.max_row * 100))
 	end = time.time()
 	print("kosdaq 분봉 수집시간 : " + str(end - start))
