@@ -86,7 +86,7 @@ def _make_tar(folder_dir, tar_name):
 			tar.add(folder_dir)
 
 
-async def domestic_stock_price(key, url, stock_num):
+async def _domestic_stock_price(key, url, stock_num):
 	header = {
 		'authorization' : "Bearer " + key['apptoken'],
 		'appkey' : key['appkey'],
@@ -103,7 +103,7 @@ async def domestic_stock_price(key, url, stock_num):
 	ret = requests.get(url=url, headers=header, params=params)
 	return ret
 
-async def foreign_stock_price(key, url, excd, stock_num):
+async def _foreign_stock_price(key, url, excd, stock_num):
 	header = {
 		'authorization' : "Bearer " + key['apptoken'],
 		'appkey' : key['appkey'],
@@ -121,7 +121,7 @@ async def foreign_stock_price(key, url, excd, stock_num):
 	ret = requests.get(url=url, headers=header, params=params)
 	return ret
 
-async def domestic_stock_min_price(key, url, stock_num, time):
+async def _domestic_stock_min_price(key, url, stock_num, time):
 	header = {
 		'content-type' : 'application/json; charset=utf-8',
 		'authorization' : "Bearer " + key['apptoken'],
@@ -139,7 +139,7 @@ async def domestic_stock_min_price(key, url, stock_num, time):
 	}
 
 	url = url['real_app_domain'] + '/uapi/domestic-stock/v1/quotations/inquire-time-itemchartprice'
-	await asyncio.sleep(0.01)
+	# await asyncio.sleep(0.01)
 	ret = requests.get(url=url, headers=header, params=params)
 	return ret
 
@@ -158,6 +158,31 @@ def _init(base_dir):
 
 	return (key, url)
 
+async def korea_min_stock_price(key, url, stock_num, csv_dir):
+	list_stock_price = list()
+	inquire_time = datetime.datetime(year=2022, month=12, day=12, hour=9, minute=29, second=0)
+	# 수많은 뻘짓의 향연...
+	# loop = asyncio.get_event_loop()
+	# task = asyncio.create_task(_domestic_stock_min_price(key, url, stock_num, inquire_time.strftime("%H%M%S")))
+	# loop.run_until_complete(task)
+	# print(task.result())
+	# stock_price = asyncio.run(_domestic_stock_min_price(key, url, stock_num, inquire_time.strftime("%H%M%S"))).json()
+	stock_price = (await _domestic_stock_min_price(key, url, stock_num, inquire_time.strftime("%H%M%S"))).json()
+	if stock_price['rt_cd'] != '0':
+		print("정상응답이 아닙니다. 종료합니다.")
+		return
+	_writerow_csv(csv_dir, stock_num, list(stock_price['output1'].keys()) + list((stock_price['output2'])[0].keys()))
+	for i in range(0, 19):
+		stock_price = (await _domestic_stock_min_price(key, url, stock_num, inquire_time.strftime("%H%M%S"))).json()
+		if stock_price['rt_cd'] != '0':
+			print("정상응답이 아닙니다. 종료합니다.")
+			return
+		for output1_val in stock_price['output2']:
+			list_stock_price.append(list(list(stock_price['output1'].values()) + list(output1_val.values())))
+		inquire_time = inquire_time + datetime.timedelta(minutes=30)
+	list_stock_price.sort(key=lambda x:x[9])
+	_writerows_csv(csv_dir, stock_num, list_stock_price)
+
 def kospi_stock_price_csv(base_dir, key, url, ws):
 	kospi_price = "kospi"
 	global today
@@ -167,29 +192,12 @@ def kospi_stock_price_csv(base_dir, key, url, ws):
 	kospi_dir = _create_folder(tmp, kospi_price)
 
 	for j in range(2, ws.max_row + 1):
-		list_stock_price = list()
 		cell_num = "A" + str(j)
 		cell_val = ws[cell_num].value
-
-		inquire_time = datetime.datetime(year=2022, month=12, day=12, hour=9, minute=29, second=0)
-		stock_price = asyncio.run(domestic_stock_min_price(key, url, cell_val, inquire_time.strftime("%H%M%S"))).json()
-		if stock_price['rt_cd'] != '0':
-			print("정상응답이 아닙니다. 종료합니다.")
-			return
-		_writerow_csv(kospi_dir, cell_val, list(stock_price['output1'].keys()) + list((stock_price['output2'])[0].keys()))
-		for i in range(0, 19):
-			stock_price = asyncio.run(domestic_stock_min_price(key, url, cell_val, inquire_time.strftime("%H%M%S"))).json()
-			if stock_price['rt_cd'] != '0':
-				print("정상응답이 아닙니다. 종료합니다.")
-				return
-			for output1_val in stock_price['output2']:
-				list_stock_price.append(list(list(stock_price['output1'].values()) + list(output1_val.values())))
-			inquire_time = inquire_time + datetime.timedelta(minutes=30)
-		list_stock_price.sort(key=lambda x:x[9])
-		_writerows_csv(kospi_dir, cell_val, list_stock_price)
+		asyncio.run(korea_min_stock_price(key, url, cell_val, kospi_dir))
 		print("kospi 분봉 수집 퍼센트 : " + str(j / ws.max_row * 100))
-	end = time.time()
-	print("kospi 분봉 수집시간 : " + str(end - start))
+		end = time.time()
+		print("kospi 분봉 수집시간 : " + str(end - start))
 
 def kosdaq_stock_price_csv(base_dir, key, url, ws):
 	kosdaq_price = "kosdaq"
@@ -200,28 +208,12 @@ def kosdaq_stock_price_csv(base_dir, key, url, ws):
 	kosdaq_dir = _create_folder(tmp, kosdaq_price)
 
 	for j in range(2, ws.max_row + 1):
-		list_stock_price = list()
 		cell_num = "A" + str(j)
 		cell_val = ws[cell_num].value
-		inquire_time = datetime.datetime(year=2022, month=12, day=12, hour=9, minute=29, second=0)
-		#argument를 작성하기 위해 시범으로 넣어봄.
-		stock_price = asyncio.run(domestic_stock_min_price(key, url, cell_val, inquire_time.strftime("%H%M%S"))).json()
-		if stock_price['rt_cd'] != '0':
-			print("정상응답이 아닙니다. 종료합니다.")
-			return
-		_writerow_csv(kosdaq_dir, cell_val, list(stock_price['output1'].keys()) + list((stock_price['output2'])[0].keys()))
-		for i in range(0, 19):
-			stock_price = asyncio.run(domestic_stock_min_price(key, url, cell_val, inquire_time.strftime("%H%M%S"))).json()
-			if stock_price['rt_cd'] != '0':
-				print("정상응답이 아닙니다. 종료합니다.")
-				return
-			for output1_val in stock_price['output2']:
-				list_stock_price.append(list(list(stock_price['output1'].values()) + list(output1_val.values())))
-			inquire_time = inquire_time + datetime.timedelta(minutes=30)
-		_writerows_csv(kosdaq_dir, cell_val, list_stock_price)
+		asyncio.run(korea_min_stock_price(key, url, cell_val, kosdaq_dir))
 		print("kosdaq 분봉 수집 퍼센트 : " + str(j / ws.max_row * 100))
-	end = time.time()
-	print("kosdaq 분봉 수집시간 : " + str(end - start))
+		end = time.time()
+		print("kosdaq 분봉 수집시간 : " + str(end - start))
 
 def nasdaq_stock_price(base_dir, key, url, dir_seperator):
 	ws1 = _read_xlxs(base_dir + "/xlsx_file", "nas_code.xlsx")
@@ -247,8 +239,8 @@ def main():
 	(key, url) = _init(base_dir)
 	target_dir = base_dir + dir_seperator + today
 
-	kospi_ws = _read_xlxs(target_dir + dir_seperator + 'kospi', 'kospi_code.xlsx')
-	kospi_stock_price_csv(base_dir, key, url, kospi_ws)
+	# kospi_ws = _read_xlxs(target_dir + dir_seperator + 'kospi', 'kospi_code.xlsx')
+	# kospi_stock_price_csv(base_dir, key, url, kospi_ws)
 	kosdaq_ws = _read_xlxs(target_dir + dir_seperator + 'kosdaq', 'kosdaq_code.xlsx')
 	kosdaq_stock_price_csv(base_dir, key, url, kosdaq_ws)
 	_make_tar(today, today + '.tar.gz')
