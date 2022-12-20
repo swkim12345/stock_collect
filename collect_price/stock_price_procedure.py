@@ -239,8 +239,8 @@ def main():
 	(key, url) = _init(base_dir)
 	target_dir = base_dir + dir_seperator + today
 
-	# kospi_ws = _read_xlxs(target_dir + dir_seperator + 'kospi', 'kospi_code.xlsx')
-	# kospi_stock_price_csv(base_dir, key, url, kospi_ws)
+	kospi_ws = _read_xlxs(target_dir + dir_seperator + 'kospi', 'kospi_code.xlsx')
+	kospi_stock_price_csv(base_dir, key, url, kospi_ws)
 	kosdaq_ws = _read_xlxs(target_dir + dir_seperator + 'kosdaq', 'kosdaq_code.xlsx')
 	kosdaq_stock_price_csv(base_dir, key, url, kosdaq_ws)
 	_make_tar(today, today + '.tar.gz')
