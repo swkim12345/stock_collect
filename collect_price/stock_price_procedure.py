@@ -182,9 +182,9 @@ async def korea_min_stock_price(key, url, stock_num, csv_dir):
 		for output1_val in stock_price['output2']:
 			list_stock_price.append(list(list(stock_price['output1'].values()) + list(output1_val.values())))
 		inquire_time = inquire_time + datetime.timedelta(minutes=30)
+	await asyncio.sleep(0.1)
 	list_stock_price.sort(key=lambda x:x[9])
 	_writerows_csv(csv_dir, stock_num, list_stock_price)
-	await asyncio.sleep(0.5)
 
 def kospi_stock_price_csv(base_dir, key, url, ws):
 	kospi_price = "kospi"
@@ -198,8 +198,8 @@ def kospi_stock_price_csv(base_dir, key, url, ws):
 		cell_num = "A" + str(j)
 		cell_val = ws[cell_num].value
 		asyncio.run(korea_min_stock_price(key, url, cell_val, kospi_dir))
-	end = time.time()
-	print("kospi 분봉 수집시간 : " + str(end - start))
+		end = time.time()
+		print("kospi 분봉 수집시간 : " + str(end - start))
 
 def kosdaq_stock_price_csv(base_dir, key, url, ws):
 	kosdaq_price = "kosdaq"
@@ -214,8 +214,8 @@ def kosdaq_stock_price_csv(base_dir, key, url, ws):
 		cell_val = ws[cell_num].value
 		asyncio.run(korea_min_stock_price(key, url, cell_val, kosdaq_dir))
 		# print("kosdaq 분봉 수집 퍼센트 : " + str(j / ws.max_row * 100))
-	end = time.time()
-	print("kosdaq 분봉 수집시간 : " + str(end - start))
+		end = time.time()
+		print("kosdaq 분봉 수집시간 : " + str(end - start))
 
 def nasdaq_stock_price(base_dir, key, url, dir_seperator):
 	ws1 = _read_xlxs(base_dir + "/xlsx_file", "nas_code.xlsx")
