@@ -184,6 +184,7 @@ async def korea_min_stock_price(key, url, stock_num, csv_dir):
 		inquire_time = inquire_time + datetime.timedelta(minutes=30)
 	list_stock_price.sort(key=lambda x:x[9])
 	_writerows_csv(csv_dir, stock_num, list_stock_price)
+	await asyncio.sleep(0.5)
 
 def kospi_stock_price_csv(base_dir, key, url, ws):
 	kospi_price = "kospi"
