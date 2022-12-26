@@ -1,4 +1,4 @@
-from stocks_info import kis_develop as kis
+from . import kis_develop as kis
 
 import os
 import platform
@@ -42,5 +42,3 @@ def main():
 
 	df.to_excel(target_folder + dir_seperator + 'kospi_code.xlsx', index=False)
 	os.remove('kospi_code.mst')
-
-main()

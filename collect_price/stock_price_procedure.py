@@ -6,7 +6,6 @@ import asyncio
 import platform
 import csv
 import tarfile
-from slack_sdk import webhook
 
 import time
 import datetime
@@ -43,9 +42,10 @@ async def korea_min_stock_price(key, url, stock_num, csv_dir):
 	try:
 		if stock_price[0]['rt_cd'] == '0':
 			_writerow_csv(csv_dir, stock_num, list(stock_price[0]['output1'].keys()) + list((stock_price[0]['output2'])[0].keys()))
+		else:
+			_send_slack(url['slack_webhook_url'], "Error : Not Correct Return - " + stock_num)
 	except:
 		_send_slack(url['slack_webhook_url'], "Error : " + stock_num + ", " + stock_price[0])
-		pass
 	for i in range(0, 19):
 		for output1_val in stock_price[i]['output2']:
 			list_stock_price.append(list(list(stock_price[i]['output1'].values()) + list(output1_val.values())))
@@ -137,13 +137,6 @@ def _writerows_csv(base_dir, file_name, data):
 
 def _new_app_token(key, url):
 	app_key_url = url['real_app_domain'] + url['new_app_token']
-	# 원래는 지금 현재 발급되어 있는 앱 토큰이 작동이 되는 지 확인 후 작동되는 거지만,
-	# 이럴 경우 예전 토큰을 사용하고 명령이 실행되는 도중 만료되면 에러가 발생하므로 해제시켜놓음.
-	# if key['apptoken']:
-	# 	task = asyncio.run(domestic_stock_price(key, url, "000660"))
-	# 	if task.status_code == 200:
-	# 		return key['apptoken']
-
 	data = {
 		"grant_type": key['grant_type'],
 		"appkey": key['appkey'],
@@ -177,7 +170,7 @@ def _make_tar(folder_dir, tar_name):
 			tar.add(folder_dir)
 
 def _send_slack(url, message):
-	# slack web hook으로 text인 메세지를 보내는 함수.
+	'''slack web hook으로 text인 메세지를 보내는 함수.'''
 	try:
 		data = {'text' : message}
 		return requests.post(url=url, json=data)
@@ -284,4 +277,3 @@ def main():
 
 	_make_tar(today, today + '.tar.gz')
 	_send_slack(url['slack_webhook_url'], 'stock min price end')
-main()
