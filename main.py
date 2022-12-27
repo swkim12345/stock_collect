@@ -15,8 +15,8 @@ if __name__=='__main__':
 	tar_file = today_date + '.tar.gz'
 	url_file = 'url.yaml'
 
-	# info.main()
-	# price.main()
+	info.main()
+	price.main()
 
 	url = price._read_yaml(src + dir_seperator + 'conf', url_file)
 
@@ -39,4 +39,4 @@ if __name__=='__main__':
 		remote.push()
 	except:
 		price._send_slack(url['slack_webhook_url'], 'Error in Git push')
-	price._send_slack(url['slack_webhook_url'], 'End collect price')
+	price._send_slack(url['slack_webhook_url'], 'End main')
