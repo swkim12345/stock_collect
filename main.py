@@ -15,6 +15,10 @@ if __name__=='__main__':
 	tar_file = today_date + '.tar.gz'
 	url_file = 'url.yaml'
 
+	print(src)
+	print(tar_dir)
+	print(tar_file)
+
 	# info.main()
 	# price.main()
 
