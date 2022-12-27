@@ -13,28 +13,17 @@ from openpyxl import load_workbook
 
 today = datetime.datetime.today().strftime('%Y_%m_%d')
 
-async def korea_min_stock_price(key, url, stock_num, csv_dir):
+async def korea_min_stock_price(key : object, url : object, stock_num : str, csv_dir : str) -> None:
+	'''
+	한국투자증권 api를 이용해 한국 주식의 분봉을 수집하는 함수
+
+	key, url 은 yaml.load를 이용해 받은 object를 권장. 이외 json도 가능
+
+	'''
 	list_stock_price = list()
 	stock_price = list()
 	inquire_time = datetime.datetime(year=2022, month=12, day=12, hour=9, minute=29, second=0)
 
-	# 설계 개선
-	# stock_price = (await _domestic_stock_min_price(key, url, stock_num, inquire_time.strftime("%H%M%S"))).json()
-	# try:
-	# 	if stock_price['rt_cd'] == '0':
-	# 		_writerow_csv(csv_dir, stock_num, list(stock_price['output1'].keys()) + list((stock_price['output2'])[0].keys()))
-	# except:
-	# 	print("Error : " + stock_num + ", " + stock_price)
-	# 	pass
-	# for i in range(0, 19):
-	# 	stock_price = (await _domestic_stock_min_price(key, url, stock_num, inquire_time.strftime("%H%M%S"))).json()
-	# 	if stock_price['rt_cd'] != '0':
-	# 		print("정상응답이 아닙니다. 종료합니다.")
-	# 		return
-	# 	for output1_val in stock_price['output2']:
-	# 		list_stock_price.append(list(list(stock_price['output1'].values()) + list(output1_val.values())))
-	# 	inquire_time = inquire_time + datetime.timedelta(minutes=30)
-	# await asyncio.sleep(0.05)
 	for i in range(0, 19):
 		stock_price.append((await _domestic_stock_min_price(key, url, stock_num, inquire_time.strftime("%H%M%S"))).json())
 		inquire_time = inquire_time + datetime.timedelta(minutes=30)
@@ -57,7 +46,6 @@ def kospi_stock_price_csv(base_dir, key, url, ws):
 	kospi_price = "kospi"
 	global today
 
-	# start = time.time()
 	tmp = _create_folder(base_dir, today)
 	kospi_dir = _create_folder(tmp, kospi_price)
 
@@ -65,15 +53,11 @@ def kospi_stock_price_csv(base_dir, key, url, ws):
 		cell_num = "A" + str(j)
 		cell_val = ws[cell_num].value
 		asyncio.run(korea_min_stock_price(key, url, cell_val, kospi_dir))
-	# 	print("kosdaq 분봉 수집 퍼센트 : " + str(j / ws.max_row * 100))
-	# end = time.time()
-	# print("kospi 분봉 수집시간 : " + str(end - start))
 
 def kosdaq_stock_price_csv(base_dir, key, url, ws):
 	kosdaq_price = "kosdaq"
 	global today
 
-	# start = time.time()
 	tmp = _create_folder(base_dir, today)
 	kosdaq_dir = _create_folder(tmp, kosdaq_price)
 
@@ -81,9 +65,6 @@ def kosdaq_stock_price_csv(base_dir, key, url, ws):
 		cell_num = "A" + str(j)
 		cell_val = ws[cell_num].value
 		asyncio.run(korea_min_stock_price(key, url, cell_val, kosdaq_dir))
-		# print("kosdaq 분봉 수집 퍼센트 : " + str(j / ws.max_row * 100))
-	# end = time.time()
-	# print("kosdaq 분봉 수집시간 : " + str(end - start))
 
 def nasdaq_stock_price(base_dir, key, url, dir_seperator):
 	ws1 = _read_xlxs(base_dir + "/xlsx_file", "nas_code.xlsx")
@@ -269,10 +250,11 @@ def main():
 	end_kospi = time.time() - start
 	_send_slack(url['slack_webhook_url'], f'kospi min price total time : {datetime.timedelta(seconds=end_kospi)}')
 
+	start = time.time()
 	kosdaq_ws = _read_xlxs(target_dir + dir_seperator + 'kosdaq', 'kosdaq_code.xlsx')
 	kosdaq_stock_price_csv(base_dir, key, url, kosdaq_ws)
 
-	end_kosdaq = time.time() - start - end_kospi
+	end_kosdaq = time.time() - start
 	_send_slack(url['slack_webhook_url'], f'kosdaq min price total time : {datetime.timedelta(seconds=end_kosdaq)}')
 
 	_make_tar(today, today + '.tar.gz')

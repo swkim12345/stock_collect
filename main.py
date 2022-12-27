@@ -15,8 +15,8 @@ if __name__=='__main__':
 	tar_file = today_date + '.tar.gz'
 	url_file = 'url.yaml'
 
-	info.main()
-	price.main()
+	# info.main()
+	# price.main()
 
 	url = price._read_yaml(src + dir_seperator + 'conf', url_file)
 
@@ -32,18 +32,11 @@ if __name__=='__main__':
 		index = repo.index
 		remote = repo.remote()
 	except:
-		print("error in init")
+		price._send_slack(url['slack_webhook_url'], 'Error in Git init')
 	try:
 		index.add(tar_dir + dir_seperator + tar_file)
-
-	except:
-		print('Error in git error in add')
-	try:
 		index.commit(f'add {today_date}.tar.gz file')
-	except:
-		print("error in commit")
-	try:
 		remote.push()
 	except:
-		print("error in push")
+		price._send_slack(url['slack_webhook_url'], 'Error in Git push')
 	price._send_slack(url['slack_webhook_url'], 'End collect price')
