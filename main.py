@@ -15,14 +15,10 @@ if __name__=='__main__':
 	tar_file = today_date + '.tar.gz'
 	url_file = 'url.yaml'
 
-	print(src)
-	print(tar_dir)
-	print(tar_file)
-
 	# info.main()
 	# price.main()
 
-	url = price._read_yaml(src + dir_seperator + 'conf', url_file)
+	url = price._read_yaml(src + dir_seperator + tar_file, url_file)
 
 	try:
 		shutil.move(src + dir_seperator + tar_file, tar_dir)
