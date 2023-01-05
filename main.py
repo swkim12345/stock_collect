@@ -3,6 +3,7 @@ import git
 import datetime
 import shutil
 import os
+import sys
 
 from collect_price import stock_info as info
 from collect_price import stock_price_procedure as price
@@ -15,7 +16,10 @@ if __name__=='__main__':
 	tar_file = today_date + '.tar.gz'
 	url_file = 'url.yaml'
 
-	info.main()
+	try:
+		info.main()
+	except:
+		sys.exit()
 	price.main()
 
 	url = price._read_yaml(src + dir_seperator + 'conf', url_file)

@@ -30,17 +30,18 @@ async def korea_min_stock_price(key : object, url : object, stock_num : str, csv
 	await asyncio.sleep(0.05)
 	try:
 		if stock_price[0]['rt_cd'] == '0':
-			_writerow_csv(csv_dir, stock_num, list(stock_price[0]['output1'].keys()) + list((stock_price[0]['output2'])[0].keys()))
+			await _writerow_csv(csv_dir, stock_num, list(stock_price[0]['output1'].keys()) + list((stock_price[0]['output2'])[0].keys()))
 		else:
 			_send_slack(url['slack_webhook_url'], "Error : Not Correct Return - " + stock_num)
 	except:
-		_send_slack(url['slack_webhook_url'], "Error : " + stock_num + ", " + stock_price[0])
+		_send_slack(url['slack_webhook_url'], "Error : Not Correct Return - " + stock_num)
+		return
 	for i in range(0, 19):
 		for output1_val in stock_price[i]['output2']:
 			list_stock_price.append(list(list(stock_price[i]['output1'].values()) + list(output1_val.values())))
 
 	list_stock_price.sort(key=lambda x:x[9])
-	_writerows_csv(csv_dir, stock_num, list_stock_price)
+	await _writerows_csv(csv_dir, stock_num, list_stock_price)
 
 def kospi_stock_price_csv(base_dir, key, url, ws):
 	kospi_price = "kospi"
@@ -51,8 +52,12 @@ def kospi_stock_price_csv(base_dir, key, url, ws):
 
 	for j in range(2, ws.max_row + 1):
 		cell_num = "A" + str(j)
-		cell_val = ws[cell_num].value
-		asyncio.run(korea_min_stock_price(key, url, cell_val, kospi_dir))
+		stock_num = ws[cell_num].value
+		try:
+			asyncio.run(korea_min_stock_price(key, url, stock_num, kospi_dir))
+		except:
+			_send_slack(url['slack_webhook_url'], "Error : " + stock_num)
+			continue
 
 def kosdaq_stock_price_csv(base_dir, key, url, ws):
 	kosdaq_price = "kosdaq"
@@ -63,8 +68,12 @@ def kosdaq_stock_price_csv(base_dir, key, url, ws):
 
 	for j in range(2, ws.max_row + 1):
 		cell_num = "A" + str(j)
-		cell_val = ws[cell_num].value
-		asyncio.run(korea_min_stock_price(key, url, cell_val, kosdaq_dir))
+		stock_num = ws[cell_num].value
+		try:
+			asyncio.run(korea_min_stock_price(key, url, stock_num, kosdaq_dir))
+		except:
+			_send_slack(url['slack_webhook_url'], "Error : " + stock_num)
+			continue
 
 def nasdaq_stock_price(base_dir, key, url, dir_seperator):
 	ws1 = _read_xlxs(base_dir + "/xlsx_file", "nas_code.xlsx")
@@ -104,13 +113,13 @@ def _write_yaml(base_dir, file_name, data):
 	with open(file_dir, 'w') as f:
 		yaml.dump(data=data, stream=f)
 
-def _writerow_csv(base_dir, file_name, data):
+async def _writerow_csv(base_dir, file_name, data):
 	file_dir = base_dir + _dir_seperator_check() + file_name
 	with open(file_dir + '.csv', 'a') as f:
 		wr = csv.writer(f)
 		wr.writerow(data)
 
-def _writerows_csv(base_dir, file_name, data):
+async def _writerows_csv(base_dir, file_name, data):
 	file_dir = base_dir + _dir_seperator_check() + file_name
 	with open(file_dir + '.csv', 'a') as f:
 		wr = csv.writer(f)
@@ -126,7 +135,6 @@ def _new_app_token(key, url):
 	ret = requests.post(url=app_key_url, data=json.dumps(data)).json()
 
 	return ret['access_token']
-
 
 def _dir_seperator_check():
 	'''함수의 구분자를 os마다 판단해서 리턴하는 값'''
@@ -159,6 +167,26 @@ def _send_slack(url, message):
 		print('webhook error!')
 		print(f'detail \n{message}')
 
+def _check_korea_holiday(key, url, check_day) -> requests.Response:
+	header= {
+		'content-type' : 'application/json; charset=utf-8',
+		'authorization' : 'Bearer ' + key['apptoken'],
+		'appkey' : key['appkey'],
+		'appsecret': key['appsecret'],
+		'tr_id' : 'CTCA0903R'
+	}
+	params = {
+		'BASS_DT' : check_day,
+		'CTX_AREA_NK' : '',
+		'CTX_AREA_FK' : ''
+	}
+	url = url['real_app_domain'] + '/uapi/domestic-stock/v1/quotations/chk-holiday'
+	try:
+		ret = requests.get(url=url, headers=header, params=params)
+	except:
+		_send_slack(url['slack_webhook_url'], 'Error in check holiday!')
+	return ret
+
 async def _domestic_stock_price(key, url, stock_num):
 	header = {
 		'authorization' : "Bearer " + key['apptoken'],
@@ -173,7 +201,11 @@ async def _domestic_stock_price(key, url, stock_num):
 	}
 
 	url = url['real_app_domain'] + '/uapi/domestic-stock/v1/quotations/inquire-price'
-	ret = requests.get(url=url, headers=header, params=params)
+	try:
+		ret = requests.get(url=url, headers=header, params=params)
+	except:
+		_send_slack(url['slack_webhook_url'], f'requests Error!\n Stock_num: {stock_num}, Time: {time}')
+		pass
 	return ret
 
 async def _foreign_stock_price(key, url, excd, stock_num):
@@ -191,7 +223,11 @@ async def _foreign_stock_price(key, url, excd, stock_num):
 	}
 
 	url = url['real_app_domain'] + '/uapi/overseas-price/v1/quotations/price'
-	ret = requests.get(url=url, headers=header, params=params)
+	try:
+		ret = requests.get(url=url, headers=header, params=params)
+	except:
+		_send_slack(url['slack_webhook_url'], f'requests Error!\n Stock_num: {stock_num}, Time: {time}')
+		pass
 	return ret
 
 async def _domestic_stock_min_price(key, url, stock_num, time):
@@ -243,6 +279,9 @@ def main():
 
 	_send_slack(url['slack_webhook_url'], 'start collect kospi min price')
 	start = time.time()
+
+	if ((_check_korea_holiday(key, url, datetime.datetime.today().strftime('%Y%m%d')).json())['output'][0]['tr_day_yn'] == 'N'):
+		raise Exception
 
 	kospi_ws = _read_xlxs(target_dir + dir_seperator + 'kospi', 'kospi_code.xlsx')
 	kospi_stock_price_csv(base_dir, key, url, kospi_ws)
