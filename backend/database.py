@@ -69,20 +69,20 @@ if __name__=='__main__':
 
     min_price_column = ['prdy_vrss','prdy_vrss_sign','prdy_ctrt','stck_prdy_clpr','acml_vol','acml_tr_pbmn_now','hts_kor_isnm','stck_prpr_now','stck_bsop_date','stck_cntg_hour','stck_prpr','stck_oprc','stck_hgpr','stck_lwpr','cntg_vol','acml_tr_pbmn']
 
-    target_dir = dir + dir_seperator + 'korea_min_stock_price' + dir_seperator + start_date.strftime('%Y_%m_%d')
-    kospi_dir = target_dir + dir_seperator + 'kospi'
-    kosdaq_dir = target_dir + dir_seperator + 'kosdaq'
+    target_dir = dir + dir_seperator + 'korea_min_stock_price'
+    kospi_dir = target_dir + dir_seperator + start_date.strftime('%Y_%m_%d') + dir_seperator + 'kospi'
+    kosdaq_dir = target_dir + dir_seperator + start_date.strftime('%Y_%m_%d') + dir_seperator + 'kosdaq'
 
     url = _read_yaml(dir + dir_seperator + 'conf', 'url.yaml')
     try:
         _unzip_tar(target_dir, target_dir, f"{start_date.strftime('%Y_%m_%d')}.tar.gz")
     except:
-        _send_slack(url['slack_webhook_url'],'Error : Not Exists Tar File')
+        _send_slack(url['slack_webhook_url'],f"Error : Not Exists Tar File")
         sys.exit()
     if not os.path.isdir(target_dir):
         _send_slack(url['slack_webhook_url'], start_date.strftime('%Y_%m_%d') + " is not exists")
         sys.exit()
-    engine = create_engine("sqlite:///database.db", echo=False, future=True)
+    engine = create_engine(f"sqlite:////{dir}{dir_seperator}database.db", echo=False, future=True)
 
     metadata_obj.create_all(engine)
     conn = engine.connect()

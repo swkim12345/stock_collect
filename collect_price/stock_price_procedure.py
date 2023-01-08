@@ -27,7 +27,7 @@ async def korea_min_stock_price(key : object, url : object, stock_num : str, csv
 	for i in range(0, 19):
 		stock_price.append((await _domestic_stock_min_price(key, url, stock_num, inquire_time.strftime("%H%M%S"))).json())
 		inquire_time = inquire_time + datetime.timedelta(minutes=30)
-	await asyncio.sleep(0.05)
+	#await asyncio.sleep(0.05)
 	try:
 		if stock_price[0]['rt_cd'] == '0':
 			await _writerow_csv(csv_dir, stock_num, list(stock_price[0]['output1'].keys()) + list((stock_price[0]['output2'])[0].keys()))
