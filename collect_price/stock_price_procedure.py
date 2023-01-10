@@ -27,7 +27,7 @@ async def korea_min_stock_price(key : object, url : object, stock_num : str, csv
 	for i in range(0, 19):
 		stock_price.append((await _domestic_stock_min_price(key, url, stock_num, inquire_time.strftime("%H%M%S"))).json())
 		inquire_time = inquire_time + datetime.timedelta(minutes=30)
-	#await asyncio.sleep(0.05)
+	await asyncio.sleep(0.05)
 	try:
 		if stock_price[0]['rt_cd'] == '0':
 			await _writerow_csv(csv_dir, stock_num, list(stock_price[0]['output1'].keys()) + list((stock_price[0]['output2'])[0].keys()))
@@ -255,26 +255,26 @@ async def _domestic_stock_min_price(key, url, stock_num, time):
 		pass
 	return ret
 
-def _init(base_dir):
-	conf_dir = 'conf'
-	dir_seperator = _dir_seperator_check()
-	key_file = 'key.yaml'
-	url_file = 'url.yaml'
+# def _init(base_dir):
+# 	conf_dir = 'conf'
+# 	dir_seperator = _dir_seperator_check()
+# 	key_file = 'key.yaml'
+# 	url_file = 'url.yaml'
 
-	key = _read_yaml(base_dir + dir_seperator + conf_dir, key_file)
-	url = _read_yaml(base_dir + dir_seperator + conf_dir, url_file)
+# 	key = _read_yaml(base_dir + dir_seperator + conf_dir, key_file)
+# 	url = _read_yaml(base_dir + dir_seperator + conf_dir, url_file)
 
-	key['apptoken'] = _new_app_token(key, url)
+# 	key['apptoken'] = _new_app_token(key, url)
 
-	_write_yaml(base_dir + dir_seperator + conf_dir, key_file, key)
+# 	_write_yaml(base_dir + dir_seperator + conf_dir, key_file, key)
 
-	return (key, url)
+# 	return (key, url)
 
 
-def main():
+def main(key, url):
 	base_dir = os.path.dirname(__file__)
 	dir_seperator = _dir_seperator_check()
-	(key, url) = _init(base_dir)
+	#(key, url) = _init(base_dir)
 	target_dir = base_dir + dir_seperator + today
 
 	_send_slack(url['slack_webhook_url'], 'start collect kospi min price')

@@ -44,13 +44,7 @@ def _unzip_tar(src_dir, dst_dir, tar_name):
         except:
             print("Error : unzip tar")
 
-def _read_yaml(base_dir, file_name):
-	file_dir = base_dir + _dir_seperator_check() + file_name
-	with open(file_dir) as f:
-		ret = yaml.load(f, Loader=yaml.FullLoader)
-	return ret
-
-if __name__=='__main__':
+def main(key, url):
     if len(sys.argv) != 4:
         print("Error: Not Enough Argument")
         sys.exit()
@@ -73,7 +67,6 @@ if __name__=='__main__':
     kospi_dir = target_dir + dir_seperator + start_date.strftime('%Y_%m_%d') + dir_seperator + 'kospi'
     kosdaq_dir = target_dir + dir_seperator + start_date.strftime('%Y_%m_%d') + dir_seperator + 'kosdaq'
 
-    url = _read_yaml(dir + dir_seperator + 'conf', 'url.yaml')
     try:
         _unzip_tar(target_dir, target_dir, f"{start_date.strftime('%Y_%m_%d')}.tar.gz")
     except:
