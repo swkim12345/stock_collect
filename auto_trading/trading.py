@@ -33,7 +33,7 @@ class CollectPrice:
 		start_time = time.time()
 		while True:
 			ret.append((await kis._domestic_stock_min_price((self.key, self.secret, self.token), self.url, self.slack_url, '000060', '000900', False)).json())
-			if ret[-1]['rt_cd'] == '0':
+			if ret[-1]['rt_cd'] != '0':
 				await fun._writerow_csv(os.path.dirname(__file__), self.file_name, ('Not Correct!',))
 			if len(ret) % 20 == 0:
 				await asyncio.sleep(0.15)
@@ -50,6 +50,7 @@ class CollectPrice:
 		self.slack_url = slack_url
 		self.file_name = file_name #test용 파일
 
+		fun._send_slack(self.slack_url, 'Start SubProcess')
 		asyncio.run(self.collect_stock())
 
 
@@ -119,3 +120,4 @@ if __name__=='__main__':
 
 	mock_p = mp.Process(name='Mock', target=mock_w.run, args=(url['slack_webhook_url'], 'mock'))
 	mock_p.start()
+
