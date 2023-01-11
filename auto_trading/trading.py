@@ -40,7 +40,7 @@ class CollectPrice:
 			if len(ret) % 100 == 0:
 				end_time = time.time()
 				total = end_time - start_time
-				string = (str(total), datetime.datetime.today().strftime('%Y%m%d%M%S'))
+				string = (str(total), datetime.datetime.today().strftime('%Y%m%d_%h%M%S'))
 				await fun._writerow_csv(os.path.dirname(__file__), self.file_name, string)
 				start_time = end_time
 
@@ -92,7 +92,7 @@ def _init():
 	app_token = (
 		kis._new_app_token(real_url, key[f'{first}_key'], key[f'{first}_secret']),
 		kis._new_app_token(real_url, key[f'{second}_key'], key[f'{second}_secret']),
-		kis._new_app_token(real_url, key[f'{mock}_key'], key[f'{mock}_secret'])
+		kis._new_app_token(mock_url, key[f'{mock}_key'], key[f'{mock}_secret'])
 	)
 
 	key[f'{first}_token'] = app_token[0]

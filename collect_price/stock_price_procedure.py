@@ -6,6 +6,7 @@ import asyncio
 import platform
 import csv
 import tarfile
+from time import sleep
 
 import time
 import datetime
@@ -49,6 +50,7 @@ def kospi_stock_price_csv(base_dir, key, url, ws):
 
 	tmp = _create_folder(base_dir, today)
 	kospi_dir = _create_folder(tmp, kospi_price)
+	error_stock_num = []
 
 	for j in range(2, ws.max_row + 1):
 		cell_num = "A" + str(j)
@@ -56,7 +58,15 @@ def kospi_stock_price_csv(base_dir, key, url, ws):
 		try:
 			asyncio.run(korea_min_stock_price(key, url, stock_num, kospi_dir))
 		except:
+			error_stock_num.append(stock_num)
 			_send_slack(url['slack_webhook_url'], "Error : " + stock_num)
+			sleep(1)
+			continue
+	for stock_num in error_stock_num:
+		try:
+			asyncio.run(korea_min_stock_price(key, url, stock_num, kospi_dir))
+		except:
+			_send_slack(url['slack_webhook_url'], "Error again : " + stock_num)
 			continue
 
 def kosdaq_stock_price_csv(base_dir, key, url, ws):
@@ -115,7 +125,7 @@ def _write_yaml(base_dir, file_name, data):
 
 async def _writerow_csv(base_dir, file_name, data):
 	file_dir = base_dir + _dir_seperator_check() + file_name
-	with open(file_dir + '.csv', 'a') as f:
+	with open(file_dir + '.csv', 'w') as f:
 		wr = csv.writer(f)
 		wr.writerow(data)
 
@@ -255,26 +265,9 @@ async def _domestic_stock_min_price(key, url, stock_num, time):
 		pass
 	return ret
 
-# def _init(base_dir):
-# 	conf_dir = 'conf'
-# 	dir_seperator = _dir_seperator_check()
-# 	key_file = 'key.yaml'
-# 	url_file = 'url.yaml'
-
-# 	key = _read_yaml(base_dir + dir_seperator + conf_dir, key_file)
-# 	url = _read_yaml(base_dir + dir_seperator + conf_dir, url_file)
-
-# 	key['apptoken'] = _new_app_token(key, url)
-
-# 	_write_yaml(base_dir + dir_seperator + conf_dir, key_file, key)
-
-# 	return (key, url)
-
-
 def main(key, url):
 	base_dir = os.path.dirname(__file__)
 	dir_seperator = _dir_seperator_check()
-	#(key, url) = _init(base_dir)
 	target_dir = base_dir + dir_seperator + today
 
 	_send_slack(url['slack_webhook_url'], 'start collect kospi min price')
