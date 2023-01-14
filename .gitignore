@@ -1,5 +1,2 @@
-auto_trading/conf
-backend/conf
-backend/*.db
-backend/korea_min_stock_price
+src/conf
 conf
