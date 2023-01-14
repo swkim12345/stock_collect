@@ -1,4 +1,4 @@
-from . import kis_develop as kis
+from ..src import kis_develop as kis
 
 import os
 import platform
@@ -24,21 +24,21 @@ def main():
 	base_dir = os.path.dirname(__file__)
 
 	target_date = datetime.datetime.today().strftime('%Y_%m_%d')
-	dir_seperator = _dir_seperator_check()
+	dir_sep = _dir_seperator_check()
 
-	target_folder = _create_folder(base_dir + dir_seperator + target_date, 'kosdaq')
+	target_folder = _create_folder(base_dir + dir_sep + target_date, 'kosdaq')
 
 	kis.kosdaq_master_download(base_dir)
 
 	df = kis.get_kosdaq_master_dataframe(base_dir)
 
-	df.to_excel(target_folder + dir_seperator + 'kosdaq_code.xlsx', index=False)
+	df.to_excel(target_folder + dir_sep + 'kosdaq_code.xlsx', index=False)
 	os.remove('kosdaq_code.mst')
 
-	target_folder = _create_folder(base_dir + dir_seperator + target_date, 'kospi')
+	target_folder = _create_folder(base_dir + dir_sep + target_date, 'kospi')
 	kis.kospi_master_download(base_dir)
 
 	df = kis.get_kospi_master_dataframe(base_dir)
 
-	df.to_excel(target_folder + dir_seperator + 'kospi_code.xlsx', index=False)
+	df.to_excel(target_folder + dir_sep + 'kospi_code.xlsx', index=False)
 	os.remove('kospi_code.mst')

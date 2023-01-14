@@ -5,8 +5,8 @@ import shutil
 import os
 import sys
 
-from collect_price import stock_info as info
-from collect_price import stock_price_procedure as price
+from src import stock_info as info
+from src import stock_price_procedure as price
 
 def _init():
 	conf_dir = 'conf'

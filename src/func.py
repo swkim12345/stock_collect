@@ -2,7 +2,7 @@ import yaml
 import csv
 import platform
 import requests
-import json
+import tarfile
 import os
 
 from openpyxl import load_workbook
@@ -35,7 +35,7 @@ def _read_xlxs(base_dir, file_name):
 
 async def _writerow_csv(base_dir, file_name, data):
 	file_dir = base_dir + _dir_seperator_check() + file_name
-	with open(file_dir + '.csv', 'a') as f:
+	with open(file_dir + '.csv', 'w') as f:
 		wr = csv.writer(f)
 		wr.writerow(data)
 
@@ -50,6 +50,12 @@ def _create_folder(base_dir, folder_name):
 	if not os.path.exists(folder):
 		os.makedirs(folder)
 	return folder
+
+def _make_tar(target, target_dir, tar_name):
+	os.chdir(target_dir)
+	if os.path.exists(target):
+		with tarfile.open(tar_name, 'w:gz') as tar:
+			tar.add(target)
 
 def _send_slack(url, message):
 	'''slack web hook으로 text인 메세지를 보내는 함수.'''
