@@ -33,7 +33,7 @@ def korea_price_subprocess(account_info: dict, stock_list: tuple, target_dir: st
 	error_stock = []
 	start_time = datetime.datetime.today()
 
-	fun._send_slack(slack_url, f'Start Collect Subprocess - {os.getpid()}\nEnd time - {start_time.strftime("%Y년 %m월 %d일 %H시 %M분 %S초")}')
+	fun._send_slack(slack_url, f'Start Collect Subprocess - {os.getpid()}')
 
 	for stock in stock_list:
 		try:
@@ -52,7 +52,7 @@ def korea_price_subprocess(account_info: dict, stock_list: tuple, target_dir: st
 			continue
 
 	end_time = datetime.datetime.today()
-	fun._send_slack(slack_url, f'End Collect Subprocess - {os.getpid()}\nEnd time - {end_time.strftime("%Y년 %m월 %d일 %H시 %M분 %S초")}')
+	fun._send_slack(slack_url, f'End Collect Subprocess - {os.getpid()}')
 
 if __name__=='__main__':
 	conf_dir = os.path.dirname(__file__) + '/conf'
@@ -125,7 +125,7 @@ if __name__=='__main__':
 	p3.join()
 
 	end_time = datetime.datetime.today()
-	fun._send_slack(slack_url, f'End Collect kospi min price \n End in {end_time.strftime("%Y년 %m월 %d일 %H시 %M분 %S초")}')
+	fun._send_slack(slack_url, f'End Collect kospi min price \n End in {end_time.strftime("%Y년 %m월 %d일 %H시 %M분 %S초")}\n\n\n')
 
 	start_time = datetime.datetime.today()
 	fun._send_slack(slack_url, f'Start Collect kosdaq min price \n Start in {start_time.strftime("%Y년 %m월 %d일 %H시 %M분 %S초")}')
@@ -147,7 +147,7 @@ if __name__=='__main__':
 	p3.join()
 
 	end_time = datetime.datetime.today()
-	fun._send_slack(slack_url, f'End Collect kosdaq min price \n End in {end_time.strftime("%Y년 %m월 %d일 %H시 %M분 %S초")}')
+	fun._send_slack(slack_url, f'End Collect kosdaq min price \n End in {end_time.strftime("%Y년 %m월 %d일 %H시 %M분 %S초")}\n\n\n')
 
 	tarfile_name = today.strftime('%Y_%m_%d') + '.tar.gz'
 	git_dir = base_dir + dir_sep + 'korea_min_stock_price'
@@ -173,4 +173,4 @@ if __name__=='__main__':
 		kis._send_slack(slack_url, f'Error in Git push as {tarfile_name}')
 
 	end_time = datetime.datetime.today()
-	fun._send_slack(slack_url, f'Push Tar File \n End in {end_time.strftime("%Y년 %m월 %d일 %H시 %M분 %S초")}')
+	fun._send_slack(slack_url, f'Push Tar File \n End in {end_time.strftime("%Y년 %m월 %d일 %H시 %M분 %S초")}\n\n\n')
