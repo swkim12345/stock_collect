@@ -12,7 +12,7 @@ import pandas as pd
 import datetime
 import os
 import sys
-import yaml
+import pymysql
 
 def _dir_seperator_check():
 	'''함수의 구분자를 os마다 판단해서 리턴하는 값'''
@@ -75,7 +75,7 @@ def main(key, url):
     if not os.path.isdir(target_dir):
         _send_slack(url['slack_webhook_url'], start_date.strftime('%Y_%m_%d') + " is not exists")
         sys.exit()
-    engine = create_engine(f"sqlite:////{dir}{dir_seperator}database.db", echo=False, future=True)
+    engine = create_engine('mysql+mysqldb://kimsky:1234@127.0.0.1:3206/stock_min_price', echo=False, future=True)
 
     metadata_obj.create_all(engine)
     conn = engine.connect()
@@ -132,6 +132,7 @@ def one_table(year, month, day):
 
     try:
         _unzip_tar(target_dir, target_dir, f"{start_date.strftime('%Y_%m_%d')}.tar.gz")
+        print('End unzip tar file \n\n\n\n')
     except:
         print('Not Tar file')
         sys.exit()
@@ -140,8 +141,12 @@ def one_table(year, month, day):
         sys.exit()
 
     table_name = 'stock'
-    engine = create_engine(f"sqlite:////{dir}{dir_seperator}database.db", echo=False, future=True)
-
+    try:
+        engine = create_engine(f"mysql+pymysql://sunghwki:sunghwki123!!@127.0.0.1:3306/stock_min_price", echo=True, future=True)
+    except Exception as e:
+        print(f'{e}')
+        sys.exit()
+    print('after engine')
     metadata_obj.create_all(engine)
     conn = engine.connect()
     ws = _read_xlxs(kospi_dir, 'kospi_code.xlsx')
@@ -170,7 +175,7 @@ def one_table(year, month, day):
     total_time = datetime.datetime.today() - start_time
     print(f"total time csv to sqlite : {total_time}")
 
-# one_table(2022, 12, 20)
+one_table(2022, 12, 20)
 # one_table(2022, 12, 21)
 # one_table(2022, 12, 22)
 # one_table(2022, 12, 23)
