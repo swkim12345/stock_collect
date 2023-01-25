@@ -29,9 +29,7 @@ async def korea_30min_stock_price(account_info, stock_num, target_dir, slack_url
 	await fun._writerows_csv(target_dir, stock_num, stock_price)
 
 def korea_price_subprocess(account_info: dict, stock_list: tuple, target_dir: str, slack_url: str) -> None:
-	base_dir = os.path.dirname(__file__)
 	error_stock = []
-	start_time = datetime.datetime.today()
 
 	fun._send_slack(slack_url, f'Start Collect Subprocess - {os.getpid()}')
 
@@ -51,44 +49,28 @@ def korea_price_subprocess(account_info: dict, stock_list: tuple, target_dir: st
 			fun._send_slack(slack_url, 'Retry Error! \nStock - ' + stock)
 			continue
 
-	end_time = datetime.datetime.today()
 	fun._send_slack(slack_url, f'End Collect Subprocess - {os.getpid()}')
 
+def _account_info(string, key_file) -> dict:
+	string = str(string)
+
+	account_info = {
+		'key' : key_file[f'{string}_key'],
+		'secret' : key_file[f'{string}_secret'],
+		'check_real' : key_file[f'{string}_check']
+	}
+	account_info = kis._new_app_token(account_info)
+	return account_info
+
 if __name__=='__main__':
-	conf_dir = os.path.dirname(__file__) + '/conf'
+	base_dir = os.path.dirname(__file__)
+	conf_dir = base_dir + '/conf'
 	key_file = fun._read_yaml(conf_dir, 'key.yaml')
 	url_file = fun._read_yaml(conf_dir, 'url.yaml')
 	slack_url = url_file['slack_webhook_url']
 
-	account_info_5007 = {
-		'key' : key_file['5007_key'],
-		'secret' : key_file['5007_secret'],
-		'check_real' : key_file['5007_check']
-	}
-	account_info_5007 = kis._new_app_token(account_info_5007)
+	account_list = (_account_info('5007', key_file), _account_info('6363', key_file), _account_info('4660', key_file), _account_info('7390', key_file))
 
-	account_info_6363 = {
-		'key' : key_file['6363_key'],
-		'secret' : key_file['6363_secret'],
-		'check_real' : key_file['6363_check']
-	}
-	account_info_6363 = kis._new_app_token(account_info_6363)
-
-	account_info_4660 = {
-		'key' : key_file['4660_key'],
-		'secret' : key_file['4660_secret'],
-		'check_real' : key_file['4660_check']
-	}
-	account_info_4660 = kis._new_app_token(account_info_6363)
-
-	account_info_7390 = {
-		'key' : key_file['7390_key'],
-		'secret' : key_file['7390_secret'],
-		'check_real' : key_file['7390_check']
-	}
-	account_info_7390 = kis._new_app_token(account_info_7390)
-
-	base_dir = os.path.dirname(__file__)
 	dir_sep = fun._dir_seperator_check()
 	today = datetime.datetime.today()
 	target = base_dir + dir_sep + today.strftime('%Y_%m_%d')
@@ -115,21 +97,16 @@ if __name__=='__main__':
 	start_time = datetime.datetime.today()
 	fun._send_slack(slack_url, f'Start Collect kospi min price \n Start in {start_time.strftime("%Y년 %m월 %d일 %H시 %M분 %S초")}')
 
-	kospi_sep = int(len(kospi_list) / 3)
-	kospi_list_p1 = kospi_list[0:kospi_sep]
-	kospi_list_p2 = kospi_list[kospi_sep : kospi_sep * 2]
-	kospi_list_p3 = kospi_list[kospi_sep * 2 :]
+	kospi_sep = int(len(kospi_list) / len(account_list))
+	process = []
+	for i in range(len(account_list)):
+		process.append(mp.Process(target=korea_price_subprocess, args=(account_list[i], kospi_list[kospi_sep * i : kospi_sep * (i + 1)], kospi_dir, slack_url)))
 
-	p1 = mp.Process(target=korea_price_subprocess, args=(account_info_5007, kospi_list_p1, kospi_dir, slack_url))
-	p2 = mp.Process(target=korea_price_subprocess, args=(account_info_6363, kospi_list_p2, kospi_dir, slack_url))
-	p3 = mp.Process(target=korea_price_subprocess, args=(account_info_7390, kospi_list_p3, kospi_dir, slack_url))
-	p1.start()
-	p2.start()
-	p3.start()
+	for p in process:
+		p.start()
 
-	p1.join()
-	p2.join()
-	p3.join()
+	for p in process:
+		p.join()
 
 	end_time = datetime.datetime.today()
 	fun._send_slack(slack_url, f'End Collect kospi min price \n End in {end_time.strftime("%Y년 %m월 %d일 %H시 %M분 %S초")}\n\n\n')
@@ -137,21 +114,17 @@ if __name__=='__main__':
 	start_time = datetime.datetime.today()
 	fun._send_slack(slack_url, f'Start Collect kosdaq min price \n Start in {start_time.strftime("%Y년 %m월 %d일 %H시 %M분 %S초")}')
 
-	kosdaq_sep = int(len(kosdaq_list) / 3)
-	kosdaq_list_p1 = kosdaq_list[0:kosdaq_sep]
-	kosdaq_list_p2 = kosdaq_list[kosdaq_sep : kosdaq_sep * 2]
-	kosdaq_list_p3 = kosdaq_list[kosdaq_sep * 2 :]
+	kosdaq_sep = int(len(kosdaq_list) / len(account_list))
 
-	p1 = mp.Process(target=korea_price_subprocess, args=(account_info_5007, kosdaq_list_p1, kosdaq_dir, slack_url))
-	p2 = mp.Process(target=korea_price_subprocess, args=(account_info_6363, kosdaq_list_p2, kosdaq_dir, slack_url))
-	p3 = mp.Process(target=korea_price_subprocess, args=(account_info_7390, kosdaq_list_p3, kosdaq_dir, slack_url))
-	p1.start()
-	p2.start()
-	p3.start()
+	process = []
+	for i in range(len(account_list)):
+		process.append(mp.Process(target=korea_price_subprocess, args=(account_list[i], kosdaq_list[kosdaq_sep * i : kosdaq_sep * (i + 1)], kosdaq_dir, slack_url)))
 
-	p1.join()
-	p2.join()
-	p3.join()
+	for p in process:
+		p.start()
+
+	for p in process:
+		p.join()
 
 	end_time = datetime.datetime.today()
 	fun._send_slack(slack_url, f'End Collect kosdaq min price \n End in {end_time.strftime("%Y년 %m월 %d일 %H시 %M분 %S초")}\n\n\n')
