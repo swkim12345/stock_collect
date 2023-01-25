@@ -8,13 +8,16 @@ from openpyxl import load_workbook
 import pandas as pd
 import datetime
 import os
+
 import func as fun
 import time
+
 
 def _unzip(tar_dir, unzip_dir, tar_name):
     try:
         fun._unzip_tar(tar_dir, unzip_dir, tar_name)
     except:
+
         fun._send_slack(slack_url, 'Not Tar file')
         raise FileExistsError
     if not os.path.isdir(unzip_dir):
@@ -32,6 +35,7 @@ def two_table(date, db_name, slack_url):
     kospi_dir = target_dir + dir_sep + start_date.strftime('%Y_%m_%d') + dir_sep + 'kospi'
     kosdaq_dir = target_dir + dir_sep + start_date.strftime('%Y_%m_%d') + dir_sep + 'kosdaq'
 
+
     #_unzip(target_dir, target_dir, f"{start_date.strftime('%Y_%m_%d')}.tar.gz")
 
     price_table_name = 'stock_price'
@@ -39,6 +43,7 @@ def two_table(date, db_name, slack_url):
     engine = create_engine(f"sqlite:////{target_dir}{dir_sep}{db_name}.db", echo=False, future=True)
 
     metadata_obj = MetaData()
+
     metadata_obj.create_all(engine)
     conn = engine.connect()
 
@@ -82,9 +87,11 @@ def two_table(date, db_name, slack_url):
 
     conn.close()
 
+
 if __name__=='__main__':
     url = fun._read_yaml('conf', 'url.yaml')
     slack_url = url['slack_webhook_url']
+
 
     fun._send_slack( slack_url, f'Start stock data to database.\n {datetime.datetime.today().strftime("%Y년 %m월 %d일 %H시 %M분 %S초 시작")}')
     for day in range(1, 25):
