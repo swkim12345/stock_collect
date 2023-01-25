@@ -21,9 +21,9 @@ min_price_column = ('prdy_vrss','prdy_vrss_sign','prdy_ctrt','stck_prdy_clpr','a
 'acml_tr_pbmn_now','hts_kor_isnm','stck_prpr_now','stck_bsop_date','stck_cntg_hour',
 'stck_prpr','stck_oprc','stck_hgpr','stck_lwpr','cntg_vol','acml_tr_pbmn')
 
-def database():
+def database(database_name):
 	dir = os.path.dirname(__file__)
-	engine = create_engine(f'sqlite:////{dir}/database.db', echo=False)
+	engine = create_engine(f'sqlite:////{dir}/{database_name}.db', echo=False)
 
 	session = Session(engine)
 
@@ -37,82 +37,52 @@ def database():
 
 	return conn, table_name
 
-def main(conn, table_name):
+def _table_want(conn, table_name, date) -> DataFrame:
+	year, month, day = date.split(',')
+	start_date = datetime.datetime(year=int(year), month=int(month), day=int(day))
+	try:
+		result = conn.execute(text(
+			f"SELECT prdy_vrss, prdy_vrss_sign, prdy_ctrt, stck_prdy_clpr, acml_vol, acml_tr_pbmn_now, stck_prpr_now, stck_bsop_date, stck_cntg_hour, stck_prpr, stck_oprc, stck_hgpr, stck_lwpr, cntg_vol, acml_tr_pbmn \
+			FROM '{table_name}'\
+			WHERE stck_bsop_date = {start_date.strftime('%Y%m%d')} and stck_cntg_hour >= 090000 and stck_cntg_hour <= 180000"
+		))
+	except:
+		raise Exception
+	df = pd.DataFrame(result.all())
+	return df
+
+# turtle trading 방식으로 트레이딩을 진행함.
+# def turtle_trading(df):
+# 	result_file = open('result.csv', mode='w')
+# 	file = csv.writer(result_file)
+# 	moving_minutes = 1
+# 	start_time = datetime.datetime(year=2023, month=1, day=1, hour=9, minute=0)
+# 	seperate_time = datetime.datetime(year=2023, month=1, day=1, hour=9, minute=10)
+# 	end_time = datetime.datetime(year=2023, month=1, day=1, hour=9, minute=21)
+# 	for i in range(360):
+
+def turtle_trading(df, start_date):
 	result_file = open('result.csv', mode='w')
 	file = csv.writer(result_file)
-	stock_info = []
 	moving_minutes = 1
-	start_time = datetime.datetime(year=2023, month=1, day=1, hour=9, minute=0)
-	seperate_time = datetime.datetime(year=2023, month=1, day=1, hour=9, minute=10)
-	end_time = datetime.datetime(year=2023, month=1, day=1, hour=9, minute=21)
-	for i in range(360):
-		stock_list = []
-		for table in table_name:
-			try:
-				result = conn.execute(text
-				(f"SELECT stck_cntg_hour, acml_tr_pbmn, stck_prpr, stck_hgpr, stck_lwpr FROM '{table}' WHERE stck_bsop_date = 20221222 and stck_cntg_hour >= '{start_time.strftime('%H%m00')}' and stck_cntg_hour <= '{end_time.strftime('%H%m00')}'"))
-			except:
-				print(f"Error in {table}!")
-				continue
-			df = pd.DataFrame(result.all())
-			try:
-				max_df = df['stck_cntg_hour'] >= start_time.strftime('%H%m00') and df['stck_cntg_hour'] < end_time.strftime('%H%m00')
-				min_df = df['stck_cntg_hour'] >= seperate_time.strftime('%H%m00') and df['stck_cntg_hour'] < end_time.strftime('%H%m00')
-				stock_now_price = df['stck_cntg_hour'][f"{end_time.strftime('%H%m00')}"]
-				if max_df.max < stock_now_price:
-					stock_list.append((max_df.max / stock_now_price, table, stock_now_price))
-			except:
-				print('Error')
-				continue
-		stock_list.sort()
-		print(stock_list[0])
-		start_time += datetime.timedelta(minutes=moving_minutes)
-		seperate_time += datetime.timedelta(minutes=moving_minutes)
-		end_time += datetime.timedelta(minutes=moving_minutes)
+	year, month, day = start_date.split(',')
+	start_time = datetime.datetime(year=)
 
-	initial_money = 100000000
+if __name__=='__main__':
+	conn, table_name = database('diff_table_2022_12')
+	print(len(table_name))
+	df_list = []
+	for table in table_name:
+		if 'Q' or 'F' or 'J' in table:
+			table_name.remove(table)
+	print(len(table_name))
+	for table in table_name:
+		df = _table_want(conn, table, '2022,12,22')
+		df['stck_name'] = float(table)
+		df_list.append(df)
+	for table in table_name:
+		df = _table_want(conn, table, '2022,12,23')
+		df['stck_name'] = float(table)
+		df_list.append(df)
 
-
-(conn, table_name) = database()
-main(conn,table_name)
-# for table in table_name:
-# 	#1000만원으로 주식 하나로 거래.
-# 	if table[0] == 'J' or table[0] == 'Q' or table[0] == 'F':
-# 		continue
-# 	initial_money = 10000000
-# 	stock = 0
-# 	result = conn.execute(text(f"SELECT stck_bsop_date, stck_cntg_hour, stck_prpr, stck_hgpr, stck_lwpr, acml_tr_pbmn_now FROM '{table}' WHERE stck_cntg_hour < 152000"))
-# 	df = pd.DataFrame(result.all())
-# 	df.
-
-
-	# twenty_max_price = df['stck_hgpr'].rolling(window=240).max()
-	# ten_min_price = df['stck_lwpr'].rolling(window=120).min()
-	# # print(twenty_max_price)
-	# # print('\n\n')
-	# # print(ten_min_price)
-	# for i in range(10, len(df) - 11):
-	# 	get_price = 0
-	# 	try:
-	# 		if df['stck_prpr'][i] == 0:
-	# 			break
-	# 		elif df['stck_prpr'][i + 1] > twenty_max_price[i]:
-	# 			stock += initial_money / df['stck_prpr'][i + 1]
-	# 			initial_money -= initial_money / df['stck_prpr'][i + 1] * df['stck_prpr'][i + 1]
-	# 			get_price = df['stck_prpr'][i + 1]
-	# 		elif df['stck_prpr'][i + 1] < ten_min_price[i]:
-	# 			initial_money += stock * df['stck_prpr'][i + 1] * 0.995
-	# 			stock = 0
-	# 		# elif df['stck_prpr'][i + 1] < get_price:
-	# 		# 	initial_money += stock * df['stck_prpr'][i + 1] * 0.995
-	# 		# 	stock = 0
-	# 	except:
-	# 		stock = 0
-	# 		initial_money = 10000000
-	# 		break
-	# output = stock * df.iloc[-1]['stck_prpr'] + initial_money
-	# money += output
-	# if output < 1000000:
-	# 	print(output)
-	# file.writerow(list((table, output, df['stck_prpr'][0], df['acml_tr_pbmn_now'][0])))
-
+	df = pd.concat(df_list)

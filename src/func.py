@@ -66,3 +66,10 @@ def _send_slack(url, message):
 	except:
 		print('webhook error!')
 		print(f'detail \n{message}')
+
+def _unzip_tar(src_dir, dst_dir, tar_name):
+	with tarfile.open(src_dir + _dir_seperator_check() + tar_name, mode='r') as tar:
+		try:
+			tar.extractall(path=dst_dir)
+		except:
+			print("Error : unzip tar")

@@ -74,6 +74,13 @@ if __name__=='__main__':
 	}
 	account_info_6363 = kis._new_app_token(account_info_6363)
 
+	account_info_4660 = {
+		'key' : key_file['4660_key'],
+		'secret' : key_file['4660_secret'],
+		'check_real' : key_file['4660_check']
+	}
+	account_info_4660 = kis._new_app_token(account_info_6363)
+
 	account_info_7390 = {
 		'key' : key_file['7390_key'],
 		'secret' : key_file['7390_secret'],
