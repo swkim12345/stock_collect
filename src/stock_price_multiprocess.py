@@ -44,6 +44,7 @@ def korea_price_subprocess(account_info: dict, stock_list: tuple, target_dir: st
 			continue
 	for stock in error_stock:
 		try:
+			time.sleep(1)
 			asyncio.run(korea_30min_stock_price(account_info, stock, target_dir, slack_url))
 		except:
 			fun._send_slack(slack_url, 'Retry Error! \nStock - ' + stock)
